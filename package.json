@@ -1,0 +1,21 @@
+{
+  "name": "lamda-serverless-demo",
+  "version": "1.0.0",
+  "description": "Serverless AWS Book",
+  "main": "index.js",
+  "scripts": {
+    "start": "node --experimental-modules test.js",
+    "test": "run-local-lambda --file index.js --event tests/event.json",
+    "predeploy": "zip -r image-resize.zip * -x *.zip *.json *.log",
+    "deploy": "aws lambda update-function-code --function-name arn:aws:lambda:eu-west-1:423299723934:function:dn-image-resize --zip-file fileb://image-resize.zip"
+  },
+  "author": "Danny Nicholas",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.606.0",
+    "sharp": "^0.24.0"
+  },
+  "devDependencies": {
+    "run-local-lambda": "^1.1.1"
+  }
+}

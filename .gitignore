@@ -105,6 +105,18 @@ dist
 # TernJS port file
 .tern-port
 
+## Typescript Ignores
+
+# package directories
+node_modules
+jspm_packages
+
+# Serverless directories
+.serverless
+
+# Webpack directories
+.webpack
+
 
 ## Java Ignores
 

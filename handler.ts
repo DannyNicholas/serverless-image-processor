@@ -1,27 +1,23 @@
-import { Callback, Context, Handler, S3EventRecord } from 'aws-lambda';
+import { Callback, Context, Handler, S3EventRecord, S3Event } from 'aws-lambda';
 import { S3, AWSError } from 'aws-sdk';
 import * as sharp from 'sharp';
 import { PromiseResult } from 'aws-sdk/lib/request';
 import { GetObjectOutput, Body, PutObjectOutput } from 'aws-sdk/clients/s3';
 
-// const { Callback, Context, Handler, S3EventRecord } = require('aws-lambda');
-// const { S3, AWSError } = require ('aws-sdk');
-// const sharp = require ('sharp');
-// const { PromiseResult } = require ('aws-sdk/lib/request');
-// const { GetObjectOutput, Body, PutObjectOutput } = require ( 'aws-sdk/clients/s3');
-
 const s3 = new S3({
     signatureVersion: 'v4',
   });
 const format = 'jpg';
-const OUT_BUCKET = 'bris-aws-study-dn-processed-images';
+const OUT_BUCKET = process.env.PROCESSED_BUCKET;
 
 
-export const imageTransform: Handler = async (event: S3EventRecord, context: Context, callback: Callback) => {
+export const imageTransform: Handler = async (event: S3Event, context: Context, callback: Callback) => {
   
-  // retrieve bucket name of object key
-  const inputBucket: string = event.s3.bucket.name;
-  const key: string = event.s3.object.key;
+  // retrieve bucket details - we only expect 1 record
+  const s3RecordEvent: S3EventRecord = event.Records[0];
+  console.log(`Received Event:\n${JSON.stringify(s3RecordEvent, null, 2)}`);
+  const inputBucket: string = s3RecordEvent.s3.bucket.name;
+  const key: string = s3RecordEvent.s3.object.key;
 
   // replace any input file spaces with '+'
   const sourceKey: string = decodeURIComponent(key.replace(/\+/g, ' '));
@@ -43,8 +39,8 @@ export const imageTransform: Handler = async (event: S3EventRecord, context: Con
       console.log(`Successfully completed with tag ${result.ETag}`);
       callback(null, `{ message: 'SUCCESS', tag: ${result.ETag},  event }`);
   } catch(err) {
-    if(err instanceof AWSError) {
-      console.log(`AWS Exception '${err.message}' while attempting to resize image file.`);
+    if(typeof err === 'object' && err.hasOwnProperty('message')) {
+      console.log(`Exception '${err.message}' while attempting to resize image file.`);
       callback(err);
     }
     else {

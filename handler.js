@@ -9,10 +9,9 @@ const S3 = new AWS.S3({
   });
 const Sharp = require('sharp');
 const format = 'jpg';
+const outputBucket = process.env.PROCESSED_BUCKET;
 
-const OUT_BUCKET = 'bris-aws-study-dn-processed-images';
-
-exports.handler = async (event, context, callback) => {
+exports.imageTransform = async (event, context, callback) => {
 
     // retrieve bucket name of object key
     const inputBucket = event.Records[0].s3.bucket.name;
@@ -24,6 +23,8 @@ exports.handler = async (event, context, callback) => {
     // remove the extension
     const outputKey = sourceKey.split('.')[0];
 
+    console.log('Welcome');
+
     try {
         console.log(`Getting image: '${key}' from bucket: '${inputBucket}'...`);
         const originalImageFile = await getImageFromBucket(inputBucket, key);
@@ -31,11 +32,11 @@ exports.handler = async (event, context, callback) => {
         console.log(`Processing image of type '${originalImageFile.ContentType}'...`);
         const processedImageBuffer = await processImage(originalImageFile.Body, format);
     
-        console.log(`Writing image: '${outputKey}.${format}' to bucket: '${OUT_BUCKET}'...`);
-        const result = await writeImageToBucket(OUT_BUCKET, outputKey, format, processedImageBuffer);
+        console.log(`Writing image: '${outputKey}.${format}' to bucket: '${outputBucket}'...`);
+        const result = await writeImageToBucket(outputBucket, outputKey, format, processedImageBuffer);
 
         console.log(`Successfully completed with tag ${result.ETag}`);
-        callback(null, result);
+        callback(null, `{ message: 'SUCCESS', tag: ${result.ETag},  event }`);
     } catch(err) {
         console.log(`Exception while attempting to resize image file:\n${err}`);
         callback(Error(err));
